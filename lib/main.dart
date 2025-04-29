@@ -25,13 +25,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '新接龍',
+      title: '新新接龍',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
         fontFamily: 'NotoSansTC',
       ),
-      home: const FreeCellGameScreen(title: '新接龍'),
+      home: const FreeCellGameScreen(title: '新新接龍'),
     );
   }
 }
