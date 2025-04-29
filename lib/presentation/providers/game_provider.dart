@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../domain/entities/card.dart' as domain;
+import '../../domain/entities/game_record.dart';
 import '../../domain/entities/game_state.dart';
-import '../../main.dart' show historyNotifierProvider, GameRecord;
+import '../providers/history_provider.dart';
+import '../widgets/history_dialog.dart';
 import 'providers.dart';
 
 part 'game_provider.g.dart';
@@ -32,6 +34,19 @@ class GameNotifier extends _$GameNotifier {
   void startNewGame() {
     final startGameUseCase = ref.read(startGameUseCaseProvider);
     state = startGameUseCase();
+  }
+
+  /// 顯示歷史記錄對話框
+  void showHistoryDialog() {
+    if (_context == null) {
+      developer.log('無法顯示歷史記錄對話框：context為空');
+      return;
+    }
+
+    showDialog(
+      context: _context!,
+      builder: (context) => const HistoryDialog(),
+    );
   }
 
   /// 選擇卡片
@@ -187,8 +202,8 @@ class GameNotifier extends _$GameNotifier {
     );
 
     try {
-      // 使用HistoryNotifier添加記錄，它會自動刷新
-      await ref.read(historyNotifierProvider.notifier).addGameRecord(record);
+      // 使用HistoryNotifier保存記錄
+      await ref.read(historyNotifierProvider.notifier).saveGameRecord(record);
       developer.log('遊戲記錄保存成功！歷史記錄已更新');
     } catch (e) {
       developer.log('保存遊戲記錄時發生錯誤：$e');

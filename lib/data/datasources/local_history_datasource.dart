@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -32,12 +33,14 @@ class LocalHistoryDataSourceImpl implements LocalHistoryDataSource {
   @override
   Future<List<GameRecord>> getGameHistory() async {
     final historyJson = _prefs.getStringList(_historyKey) ?? [];
+    developer.log('LocalHistoryDataSource: 獲取遊戲歷史記錄，共 ${historyJson.length} 條');
 
     try {
       return historyJson
           .map((json) => GameRecord.fromJson(jsonDecode(json)))
           .toList();
     } catch (e) {
+      developer.log('LocalHistoryDataSource: 解析歷史記錄失敗 - $e');
       // 如果解析失敗，返回空列表
       return [];
     }
@@ -45,6 +48,8 @@ class LocalHistoryDataSourceImpl implements LocalHistoryDataSource {
 
   @override
   Future<void> saveGameRecord(GameRecord record) async {
+    developer.log(
+        'LocalHistoryDataSource: 保存遊戲記錄 - ${record.date}, 移動次數: ${record.moves}');
     // 獲取現有記錄
     final history = await getGameHistory();
 
@@ -55,7 +60,9 @@ class LocalHistoryDataSourceImpl implements LocalHistoryDataSource {
     if (history.length > _maxRecords) {
       // 按日期排序，保留最新的記錄
       history.sort((a, b) => b.date.compareTo(a.date));
-      history.removeLast();
+      final removedRecord = history.removeLast();
+      developer.log(
+          'LocalHistoryDataSource: 超過最大記錄數量($_maxRecords)，移除最舊記錄 - ${removedRecord.date}');
     }
 
     // 將記錄轉換為JSON字串列表
@@ -64,10 +71,12 @@ class LocalHistoryDataSourceImpl implements LocalHistoryDataSource {
 
     // 保存到SharedPreferences
     await _prefs.setStringList(_historyKey, historyJson);
+    developer.log('LocalHistoryDataSource: 保存完成，目前共 ${history.length} 條歷史記錄');
   }
 
   @override
   Future<void> clearGameHistory() async {
+    developer.log('LocalHistoryDataSource: 清除所有歷史記錄');
     await _prefs.remove(_historyKey);
   }
 }

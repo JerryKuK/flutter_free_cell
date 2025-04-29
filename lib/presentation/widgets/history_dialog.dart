@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -31,6 +33,7 @@ class _HistoryDialogState extends ConsumerState<HistoryDialog> {
   @override
   Widget build(BuildContext context) {
     final historyAsync = ref.watch(historyNotifierProvider);
+    developer.log('HistoryDialog: 載入歷史記錄，排序方式: $_sortMethod');
 
     return Dialog(
       child: Container(
@@ -125,6 +128,8 @@ class _HistoryDialogState extends ConsumerState<HistoryDialog> {
                 }
 
                 final sortedHistory = snapshot.data ?? [];
+                developer.log(
+                    'HistoryDialog: 獲取排序後的歷史記錄，共 ${sortedHistory.length} 條');
 
                 if (sortedHistory.isEmpty) {
                   return const Center(child: Text('暫無歷史記錄'));
@@ -189,6 +194,7 @@ class _HistoryDialogState extends ConsumerState<HistoryDialog> {
             children: [
               TextButton(
                 onPressed: () async {
+                  developer.log('HistoryDialog: 清除歷史記錄');
                   await ref
                       .read(historyNotifierProvider.notifier)
                       .clearGameHistory();
