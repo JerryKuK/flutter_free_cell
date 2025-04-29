@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../domain/entities/card.dart' as domain;
-import '../../domain/entities/game_record.dart';
 import '../../domain/entities/game_state.dart';
+import '../../main.dart' show historyNotifierProvider, GameRecord;
 import 'providers.dart';
 
 part 'game_provider.g.dart';
@@ -55,15 +55,22 @@ class GameNotifier extends _$GameNotifier {
   void tryMoveCard(CardLocation from, CardLocation to) {
     try {
       final moveCardUseCase = ref.read(moveCardUseCaseProvider);
-      state = moveCardUseCase(state, from, to);
+      final newState = moveCardUseCase(state, from, to);
 
       // 檢查遊戲是否完成
-      if (state.isGameCompleted) {
-        saveGameRecord();
-        _showGameCompletedDialog();
+      if (newState.isGameCompleted && !state.isGameCompleted) {
+        developer.log('遊戲完成！準備保存記錄...');
+        state = newState; // 先更新狀態，這樣saveGameRecord才能獲取正確的狀態
+        saveGameRecord().then((_) {
+          developer.log('遊戲記錄已保存！');
+          _showGameCompletedDialog();
+        });
+      } else {
+        state = newState;
       }
     } catch (e) {
       // 移動失敗，取消選擇
+      developer.log('移動失敗：$e');
       state = state.clearSelection();
     }
   }
@@ -134,15 +141,18 @@ class GameNotifier extends _$GameNotifier {
       }
     }
 
-    // 確保更新狀態
-    state = newState;
-    developer.log('已更新遊戲狀態');
-
     // 檢查遊戲是否完成
-    if (state.isGameCompleted) {
-      saveGameRecord();
-      developer.log('遊戲已完成，保存記錄');
-      _showGameCompletedDialog();
+    if (newState.isGameCompleted && !state.isGameCompleted) {
+      developer.log('通過自動收集完成遊戲！準備保存記錄...');
+      state = newState; // 先更新狀態
+      saveGameRecord().then((_) {
+        developer.log('自動收集後的遊戲記錄已保存！');
+        _showGameCompletedDialog();
+      });
+    } else {
+      // 確保更新狀態
+      state = newState;
+      developer.log('已更新遊戲狀態');
     }
 
     // 強制通知UI更新
@@ -155,23 +165,42 @@ class GameNotifier extends _$GameNotifier {
 
   /// 保存遊戲記錄
   Future<void> saveGameRecord() async {
-    if (!state.isGameCompleted || state.endTime == null) return;
+    developer.log('嘗試保存遊戲記錄...');
+    if (!state.isGameCompleted) {
+      developer.log('遊戲未完成，不保存記錄');
+      return;
+    }
+
+    if (state.endTime == null) {
+      developer.log('遊戲結束時間為空，不保存記錄');
+      return;
+    }
 
     final duration = state.endTime!.difference(state.startTime);
+    developer.log('遊戲持續時間：${duration.inMinutes}分${duration.inSeconds % 60}秒');
+    developer.log('移動次數：${state.moveCount}');
+
     final record = GameRecord(
       date: DateTime.now(),
       moves: state.moveCount,
       duration: duration,
     );
 
-    final manageHistoryUseCase =
-        await ref.read(manageHistoryUseCaseProvider.future);
-    await manageHistoryUseCase.saveGameRecord(record);
+    try {
+      // 使用HistoryNotifier添加記錄，它會自動刷新
+      await ref.read(historyNotifierProvider.notifier).addGameRecord(record);
+      developer.log('遊戲記錄保存成功！歷史記錄已更新');
+    } catch (e) {
+      developer.log('保存遊戲記錄時發生錯誤：$e');
+    }
   }
 
   /// 顯示遊戲完成對話框
   void _showGameCompletedDialog() {
-    if (_context == null) return;
+    if (_context == null) {
+      developer.log('無法顯示遊戲完成對話框：context為空');
+      return;
+    }
 
     // 使用WidgetsBinding確保在UI更新後再顯示對話框
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -180,6 +209,7 @@ class GameNotifier extends _$GameNotifier {
       final duration = state.endTime!.difference(state.startTime);
       final minutes = duration.inMinutes;
       final seconds = duration.inSeconds % 60;
+      developer.log('顯示遊戲完成對話框，遊戲時間：$minutes分$seconds秒');
 
       // 保存當前context的引用
       final BuildContext currentContext = _context!;
@@ -202,8 +232,9 @@ class GameNotifier extends _$GameNotifier {
               onPressed: () {
                 // 先關閉對話框
                 Navigator.of(dialogContext).pop();
-                // 使用延遲確保對話框已完全關閉後再開始新遊戲
-                Future.microtask(() {
+                developer.log('使用者選擇開始新遊戲');
+                // 確保對話框完全關閉後再開始新遊戲
+                Future.delayed(const Duration(milliseconds: 300), () {
                   startNewGame();
                 });
               },
@@ -213,6 +244,7 @@ class GameNotifier extends _$GameNotifier {
               onPressed: () {
                 // 只關閉對話框
                 Navigator.of(dialogContext).pop();
+                developer.log('使用者選擇關閉對話框');
               },
               child: const Text('關閉'),
             ),

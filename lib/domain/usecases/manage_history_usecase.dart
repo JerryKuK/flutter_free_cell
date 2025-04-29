@@ -40,12 +40,16 @@ class ManageHistoryUseCase {
         return timeCompare != 0 ? timeCompare : a.moves.compareTo(b.moves);
       });
     } else if (sortMethod == 2) {
-      // 按移動次數排序
+      // 按移動次數排序，如果相同則按完成時間排序，如果還相同則按日期排序
       sortedHistory.sort((a, b) {
         int movesCompare = a.moves.compareTo(b.moves);
-        return movesCompare != 0
-            ? movesCompare
-            : a.duration.compareTo(b.duration);
+        if (movesCompare != 0) return movesCompare;
+
+        int timeCompare = a.duration.compareTo(b.duration);
+        if (timeCompare != 0) return timeCompare;
+
+        // 如果移動次數和完成時間都相同，則按最新日期排序（降序）
+        return b.date.compareTo(a.date);
       });
     } else {
       // 默認按日期排序

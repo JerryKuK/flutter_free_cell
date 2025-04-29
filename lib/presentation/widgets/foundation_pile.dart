@@ -30,6 +30,7 @@ class FoundationPileWidget extends ConsumerWidget {
     }
 
     final gameState = ref.watch(gameNotifierProvider);
+    final gameNotifier = ref.read(gameNotifierProvider.notifier);
     final isSelected =
         gameState.selectedCardLocation?.type == CardLocationType.foundation &&
             gameState.selectedCardLocation?.index == index;
@@ -41,70 +42,98 @@ class FoundationPileWidget extends ConsumerWidget {
       developer.log('警告：gameState 與 props 中的基礎堆數據不一致！');
     }
 
-    return GestureDetector(
-      onTap: () {
-        final gameNotifier = ref.read(gameNotifierProvider.notifier);
-
-        if (pile.isNotEmpty) {
-          // 如果基礎堆不為空
-          if (isSelected) {
-            // 如果點擊的是已選中的卡片，取消選擇
-            gameNotifier.clearSelection();
-          } else if (gameState.selectedCard == null) {
-            // 如果沒有選擇卡片，選擇基礎堆頂部卡片
-            final location = CardLocation(
-              type: CardLocationType.foundation,
-              index: index,
-            );
-
-            developer.log('選擇基礎堆 $index 頂部卡片：${pile.last}');
-            gameNotifier.selectCard(pile.last, location);
-          } else {
-            // 如果已選擇卡片，且點擊有卡片的基礎堆，嘗試選擇基礎堆頂部卡片
-            final location = CardLocation(
-              type: CardLocationType.foundation,
-              index: index,
-            );
-
-            developer.log('選擇基礎堆 $index 頂部卡片：${pile.last}');
-            gameNotifier.selectCard(pile.last, location);
-          }
-        } else if (gameState.selectedCard != null &&
-            gameState.selectedCardLocation != null) {
-          // 如果基礎堆為空且已選擇卡片，嘗試移動到基礎堆
-          final toLocation = CardLocation(
+    // 創建卡片位置
+    final cardLocation = pile.isNotEmpty
+        ? CardLocation(
             type: CardLocationType.foundation,
             index: index,
-          );
+          )
+        : null;
 
-          developer.log('嘗試移動卡片到基礎堆 $index');
-          gameNotifier.tryMoveCard(gameState.selectedCardLocation!, toLocation);
-        }
+    // 使用 DragTarget 包裝整個基礎堆
+    return DragTarget<DraggableCardData>(
+      onWillAcceptWithDetails: (details) {
+        // 檢查卡片是否可以放入基礎堆
+        return details.data.card.canPlaceInFoundation(pile, index);
       },
-      child: Material(
-        elevation: 2,
-        borderRadius: BorderRadius.circular(4),
-        color: isSelected
-            ? Colors.blueAccent.withOpacity(0.3)
-            : Colors.grey.shade200,
-        child: Container(
-          height: 70,
-          alignment: Alignment.center,
-          child: pile.isNotEmpty
-              ? CardWidget(
-                  card: pile.last,
-                  isSelected: isSelected,
-                  size: 60,
-                )
-              : Text(
-                  _getSuitSymbol(index),
-                  style: TextStyle(
-                    fontSize: 24,
-                    color: _isRedSuit(index) ? Colors.red : Colors.black,
-                  ),
-                ),
-        ),
-      ),
+      onAcceptWithDetails: (details) {
+        // 移動卡片到基礎堆
+        final toLocation = CardLocation(
+          type: CardLocationType.foundation,
+          index: index,
+        );
+        gameNotifier.tryMoveCard(details.data.location, toLocation);
+      },
+      builder: (context, candidateData, rejectedData) {
+        return GestureDetector(
+          onTap: () {
+            if (pile.isNotEmpty) {
+              // 如果基礎堆不為空
+              if (isSelected) {
+                // 如果點擊的是已選中的卡片，取消選擇
+                gameNotifier.clearSelection();
+              } else if (gameState.selectedCard == null) {
+                // 如果沒有選擇卡片，選擇基礎堆頂部卡片
+                final location = CardLocation(
+                  type: CardLocationType.foundation,
+                  index: index,
+                );
+
+                developer.log('選擇基礎堆 $index 頂部卡片：${pile.last}');
+                gameNotifier.selectCard(pile.last, location);
+              } else {
+                // 如果已選擇卡片，且點擊有卡片的基礎堆，嘗試選擇基礎堆頂部卡片
+                final location = CardLocation(
+                  type: CardLocationType.foundation,
+                  index: index,
+                );
+
+                developer.log('選擇基礎堆 $index 頂部卡片：${pile.last}');
+                gameNotifier.selectCard(pile.last, location);
+              }
+            } else if (gameState.selectedCard != null &&
+                gameState.selectedCardLocation != null) {
+              // 如果基礎堆為空且已選擇卡片，嘗試移動到基礎堆
+              final toLocation = CardLocation(
+                type: CardLocationType.foundation,
+                index: index,
+              );
+
+              developer.log('嘗試移動卡片到基礎堆 $index');
+              gameNotifier.tryMoveCard(
+                  gameState.selectedCardLocation!, toLocation);
+            }
+          },
+          child: Material(
+            elevation: 2,
+            borderRadius: BorderRadius.circular(4),
+            color: candidateData.isNotEmpty
+                ? Colors.greenAccent.withOpacity(0.3) // 拖動高亮
+                : isSelected
+                    ? Colors.blueAccent.withOpacity(0.3)
+                    : Colors.grey.shade200,
+            child: Container(
+              height: 70,
+              alignment: Alignment.center,
+              child: pile.isNotEmpty
+                  ? CardWidgetSimple(
+                      card: pile.last,
+                      isSelected: isSelected,
+                      size: 60,
+                      isDraggable: true, // 啟用拖動
+                      location: cardLocation,
+                    )
+                  : Text(
+                      _getSuitSymbol(index),
+                      style: TextStyle(
+                        fontSize: 24,
+                        color: _isRedSuit(index) ? Colors.red : Colors.black,
+                      ),
+                    ),
+            ),
+          ),
+        );
+      },
     );
   }
 

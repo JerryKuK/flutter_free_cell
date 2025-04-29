@@ -49,3 +49,4 @@ class InvalidMoveException implements Exception {
 /// [state] 當前遊戲狀態
 ///
 /// 返回更新後的遊戲狀態，如果移動無效則拋出異常
+ 
