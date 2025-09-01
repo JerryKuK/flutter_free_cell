@@ -4,7 +4,7 @@ import '../../domain/entities/card.dart' as domain;
 
 /// 卡片小部件簡化版
 class CardWidgetSimple extends StatelessWidget {
-  final domain.PlayingCard card;
+  final domain.Card card;
   final double size;
   final bool isSelectable;
   final bool isSelected;
@@ -46,7 +46,7 @@ class CardWidgetSimple extends StatelessWidget {
             top: 2,
             left: 4,
             child: Text(
-              card.rank,
+              card.rank.symbol,
               style: TextStyle(
                 color: card.isRed ? Colors.red : Colors.black,
                 fontWeight: FontWeight.bold,
@@ -60,7 +60,7 @@ class CardWidgetSimple extends StatelessWidget {
             bottom: 2,
             right: 4,
             child: Text(
-              card.rank,
+              card.rank.symbol,
               style: TextStyle(
                 color: card.isRed ? Colors.red : Colors.black,
                 fontWeight: FontWeight.bold,
@@ -75,7 +75,7 @@ class CardWidgetSimple extends StatelessWidget {
               top: 2 + size * 0.28,
               left: 4,
               child: Text(
-                card.suit,
+                card.suit.symbol,
                 style: TextStyle(
                   color: card.isRed ? Colors.red : Colors.black,
                   fontSize: size * 0.28,
@@ -86,7 +86,7 @@ class CardWidgetSimple extends StatelessWidget {
           // 中間花色（始終顯示）
           Center(
             child: Text(
-              card.suit,
+              card.suit.symbol,
               style: TextStyle(
                 color: card.isRed ? Colors.red : Colors.black,
                 fontSize:
@@ -104,7 +104,7 @@ class CardWidgetSimple extends StatelessWidget {
                 width: 6,
                 height: 6,
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.7),
+                  color: Colors.blue.withValues(alpha: 0.7),
                   shape: BoxShape.circle,
                 ),
               ),

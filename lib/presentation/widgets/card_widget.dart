@@ -139,7 +139,7 @@ class CardWidget extends ConsumerWidget {
                 width: 6,
                 height: 6,
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.7),
+                  color: Colors.blue.withValues(alpha: 0.7),
                   shape: BoxShape.circle,
                 ),
               ),

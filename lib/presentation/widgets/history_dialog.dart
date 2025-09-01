@@ -161,7 +161,7 @@ class _HistoryDialogState extends ConsumerState<HistoryDialog> {
                             borderRadius: BorderRadius.circular(8),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: Colors.black.withValues(alpha: 0.1),
                                 blurRadius: 2,
                                 offset: const Offset(0, 1),
                               ),
@@ -195,10 +195,13 @@ class _HistoryDialogState extends ConsumerState<HistoryDialog> {
               TextButton(
                 onPressed: () async {
                   developer.log('HistoryDialog: 清除歷史記錄');
+                  final navigator = Navigator.of(context);
+                  
                   await ref
                       .read(historyNotifierProvider.notifier)
                       .clearGameHistory();
-                  Navigator.of(context).pop();
+                  
+                  navigator.pop();
                 },
                 child: const Text('清除記錄'),
               ),

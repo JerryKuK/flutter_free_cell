@@ -99,9 +99,9 @@ class _GameColumnWidgetState extends ConsumerState<GameColumnWidget> {
                   height: 25,
                   decoration: BoxDecoration(
                     color: candidateData.isNotEmpty
-                        ? Colors.greenAccent.withOpacity(0.3) // 拖動時高亮顯示
+                        ? Colors.greenAccent.withValues(alpha: 0.3) // 拖動時高亮顯示
                         : column.isEmpty
-                            ? Colors.blueAccent.withOpacity(0.1)
+                            ? Colors.blueAccent.withValues(alpha: 0.1)
                             : Colors.transparent,
                     borderRadius: BorderRadius.circular(4),
                     border: Border.all(

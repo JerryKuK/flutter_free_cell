@@ -7,6 +7,9 @@ import '../../data/repositories/game_repository_impl.dart';
 import '../../data/repositories/history_repository_impl.dart';
 import '../../domain/repositories/game_repository.dart';
 import '../../domain/repositories/history_repository.dart';
+import '../../domain/services/auto_collect_service.dart';
+import '../../domain/services/card_move_validation_service.dart';
+import '../../domain/services/game_state_service.dart';
 import '../../domain/usecases/auto_collect_usecase.dart';
 import '../../domain/usecases/manage_history_usecase.dart';
 import '../../domain/usecases/move_card_usecase.dart';
@@ -40,6 +43,27 @@ Future<HistoryRepository> historyRepository(Ref ref) async {
   return HistoryRepositoryImpl(dataSource);
 }
 
+/// 卡片移動驗證服務提供者
+@riverpod
+CardMoveValidationService cardMoveValidationService(Ref ref) {
+  return CardMoveValidationService();
+}
+
+/// 遊戲狀態服務提供者
+@riverpod
+GameStateService gameStateService(Ref ref) {
+  final validationService = ref.watch(cardMoveValidationServiceProvider);
+  return GameStateService(validationService);
+}
+
+/// 自動收集服務提供者
+@riverpod
+AutoCollectService autoCollectService(Ref ref) {
+  final validationService = ref.watch(cardMoveValidationServiceProvider);
+  final gameStateService = ref.watch(gameStateServiceProvider);
+  return AutoCollectService(validationService, gameStateService);
+}
+
 /// 開始遊戲用例提供者
 @riverpod
 StartGameUseCase startGameUseCase(Ref ref) {
@@ -57,8 +81,8 @@ MoveCardUseCase moveCardUseCase(Ref ref) {
 /// 自動收集用例提供者
 @riverpod
 AutoCollectUseCase autoCollectUseCase(Ref ref) {
-  final repository = ref.watch(gameRepositoryProvider);
-  return AutoCollectUseCase(repository);
+  final autoCollectService = ref.watch(autoCollectServiceProvider);
+  return AutoCollectUseCase(autoCollectService);
 }
 
 /// 管理歷史記錄用例提供者

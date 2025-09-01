@@ -108,9 +108,9 @@ class FoundationPileWidget extends ConsumerWidget {
             elevation: 2,
             borderRadius: BorderRadius.circular(4),
             color: candidateData.isNotEmpty
-                ? Colors.greenAccent.withOpacity(0.3) // 拖動高亮
+                ? Colors.greenAccent.withValues(alpha: 0.3) // 拖動高亮
                 : isSelected
-                    ? Colors.blueAccent.withOpacity(0.3)
+                    ? Colors.blueAccent.withValues(alpha: 0.3)
                     : Colors.grey.shade200,
             child: Container(
               height: 70,

@@ -99,54 +99,21 @@ class GameNotifier extends _$GameNotifier {
   void autoCollect() {
     developer.log('開始自動收集卡片流程...');
 
-    // 計算當前基礎堆中的卡片總數
-    int oldFoundationCardCount = 0;
-    for (int i = 0; i < state.foundation.length; i++) {
-      oldFoundationCardCount += state.foundation[i].length;
-      developer.log('自動收集前：基礎堆 $i 有 ${state.foundation[i].length} 張卡片');
-      if (state.foundation[i].isNotEmpty) {
-        developer.log('頂部卡片是：${state.foundation[i].last}');
-      }
-    }
-    developer.log('自動收集前基礎堆總共有 $oldFoundationCardCount 張卡片');
-    final oldMoveCount = state.moveCount;
-    developer.log('當前移動次數：$oldMoveCount');
-
     final autoCollectUseCase = ref.read(autoCollectUseCaseProvider);
-    final newState = autoCollectUseCase(state);
+    final result = autoCollectUseCase(state);
 
-    // 計算更新後基礎堆中的卡片總數
-    int newFoundationCardCount = 0;
-    for (int i = 0; i < newState.foundation.length; i++) {
-      newFoundationCardCount += newState.foundation[i].length;
-      developer.log('自動收集後：基礎堆 $i 有 ${newState.foundation[i].length} 張卡片');
-      if (newState.foundation[i].isNotEmpty) {
-        developer.log('頂部卡片是：${newState.foundation[i].last}');
-      }
-    }
-    developer.log('自動收集後基礎堆總共有 $newFoundationCardCount 張卡片');
-    developer.log(
-        '新的移動次數：${newState.moveCount}，增加了 ${newState.moveCount - oldMoveCount} 次');
-
-    // 判斷是否有卡片被回收：檢查基礎堆卡片數量是否增加
-    if (newFoundationCardCount > oldFoundationCardCount) {
-      // 有卡片被回收
-      final cardsCollected = newFoundationCardCount - oldFoundationCardCount;
-      final movesAdded = newState.moveCount - oldMoveCount;
-      developer.log('成功自動回收了 $cardsCollected 張卡片，增加了 $movesAdded 次移動');
-      if (_context != null) {
+    // 顯示結果消息
+    if (_context != null) {
+      if (result.hasCollectedCards) {
         ScaffoldMessenger.of(_context!).showSnackBar(
           SnackBar(
-            content:
-                Text('成功自動回收了 $cardsCollected 張卡片，移動次數：${newState.moveCount}'),
+            content: Text(
+              '成功自動回收了 ${result.cardsCollected} 張卡片，移動次數：${result.state.moveCount}',
+            ),
             duration: const Duration(seconds: 1),
           ),
         );
-      }
-    } else {
-      // 沒有卡片被回收
-      developer.log('沒有可以自動回收的牌');
-      if (_context != null) {
+      } else {
         ScaffoldMessenger.of(_context!).showSnackBar(
           const SnackBar(
             content: Text('沒有可以自動回收的牌'),
@@ -157,25 +124,18 @@ class GameNotifier extends _$GameNotifier {
     }
 
     // 檢查遊戲是否完成
-    if (newState.isGameCompleted && !state.isGameCompleted) {
+    if (result.state.isGameCompleted && !state.isGameCompleted) {
       developer.log('通過自動收集完成遊戲！準備保存記錄...');
-      state = newState; // 先更新狀態
+      state = result.state; // 先更新狀態
       saveGameRecord().then((_) {
         developer.log('自動收集後的遊戲記錄已保存！');
         _showGameCompletedDialog();
       });
     } else {
-      // 確保更新狀態
-      state = newState;
+      // 更新狀態
+      state = result.state;
       developer.log('已更新遊戲狀態');
     }
-
-    // 強制通知UI更新
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_context != null) {
-        developer.log('強制刷新UI');
-      }
-    });
   }
 
   /// 保存遊戲記錄

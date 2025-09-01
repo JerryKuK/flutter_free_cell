@@ -39,37 +39,6 @@ enum CardRank {
   const CardRank(this.symbol, this.value);
 }
 
-/// 撲克牌實體類
-class PlayingCard {
-  final String suit; // 花色
-  final String rank; // 點數
-  final int value; // 數值（用於比較）
-  final bool isRed; // 是否為紅色
-
-  const PlayingCard({
-    required this.suit,
-    required this.rank,
-    required this.value,
-    required this.isRed,
-  });
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is PlayingCard &&
-        other.suit == suit &&
-        other.rank == rank &&
-        other.value == value &&
-        other.isRed == isRed;
-  }
-
-  @override
-  int get hashCode =>
-      suit.hashCode ^ rank.hashCode ^ value.hashCode ^ isRed.hashCode;
-
-  @override
-  String toString() => '$rank$suit';
-}
 
 /// 卡片實體
 @immutable

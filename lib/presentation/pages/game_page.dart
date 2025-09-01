@@ -135,7 +135,7 @@ class GamePage extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
               decoration: BoxDecoration(
-                color: Colors.green.shade800.withOpacity(0.2),
+                color: Colors.green.shade800.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: ListView(

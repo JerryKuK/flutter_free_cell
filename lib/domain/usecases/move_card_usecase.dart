@@ -1,4 +1,5 @@
 import '../entities/game_state.dart';
+import '../exceptions/game_exceptions.dart';
 import '../repositories/game_repository.dart';
 
 /// 移動卡片用例
@@ -24,29 +25,4 @@ class MoveCardUseCase {
   }
 }
 
-/// 無效移動異常
-class InvalidMoveException implements Exception {
-  final String message;
-
-  InvalidMoveException(this.message);
-
-  @override
-  String toString() => 'InvalidMoveException: $message';
-}
-
-/// 將卡牌從一個位置移動到另一個位置
-///
-/// [from] 卡牌當前位置
-/// [to] 卡牌目標位置
-/// [state] 當前遊戲狀態
-///
-/// 返回更新後的遊戲狀態，如果移動無效則拋出異常
-
-/// 將卡牌從一個位置移動到另一個位置
-///
-/// [from] 卡牌當前位置
-/// [to] 卡牌目標位置
-/// [state] 當前遊戲狀態
-///
-/// 返回更新後的遊戲狀態，如果移動無效則拋出異常
  
